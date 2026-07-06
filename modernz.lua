@@ -2020,7 +2020,7 @@ local function window_controls()
     local lo
     local ontop_active = user_opts.ontop_button and window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop 
     local controlbox_w = (user_opts.window_controls and window_control_box_width or 0)
-    local controlbox_left = wc_geo.w - controlbox_w + 30 -- (1.) Smaller window controls size
+    local controlbox_left = wc_geo.w - controlbox_w + 30 -- (1.)
     local titlebox_left = ontop_active and 50 or wc_geo.x
     local button_y = wc_geo.y - (wc_geo.h / 2)
     
