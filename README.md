@@ -1,9 +1,8 @@
 <h1 align="center">This is my personal configuration of ModernZ</h1>
 
-
-
-
   This config is for my personal preferences
+
+  
   ![Small window controls](https://github.com/isdsadsgdjdg952358/my-ModernZ-config/blob/main/.github/smaller-windowcontrols.png?raw=true)
 
 
@@ -12,6 +11,10 @@
 2. fixed subtitle margins that doesn't get pushed when osc is visible
 3. hidden osc and floating progress bar when < and > pressed & video is paused
 4. theatre mode: DEL shortcut which completely hides/enables the OSC to prevent distractions
+
+
+
+If you want to implement without downloading anything, just compare codes differents from the original lua and mine and paste/configure what features you want accordingly. 
 
 
 > [!WARNING]
