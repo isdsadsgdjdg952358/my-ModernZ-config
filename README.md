@@ -1,3 +1,28 @@
+<h1 align="center">This is my personal configuration of ModernZ</h1>
+
+
+
+
+  This config is for my personal preferences
+  ![Small window controls](https://github.com/isdsadsgdjdg952358/my-ModernZ-config/blob/main/.github/smaller-windowcontrols.png?raw=true)
+
+
+ The main features are:
+1. smaller window controls size since it stood out even more than the osc.
+2. fixed subtitle margins that doesn't get pushed when osc is visible
+3. hidden osc and floating progress bar when < and > pressed & video is paused
+4. theatre mode: DEL shortcut which completely hides/enables the OSC to prevent distractions
+
+
+> [!WARNING]
+> Deepseek AI was used to make my config, sorry. If you want this down, let me know.
+
+---
+
+
+
+
+
 <h1 align="center">ModernZ - A Sleek Alternative OSC for mpv</h1>
 
 A sleek and modern OSC for [mpv](https://mpv.io/). This project is a fork of ModernX that enhances functionality by adding more features while preserving the core standards of mpv's OSC.
