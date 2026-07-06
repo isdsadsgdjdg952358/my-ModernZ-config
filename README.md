@@ -16,6 +16,8 @@
 
 If you want to implement without downloading anything, just compare codes differences from the original lua and mine and paste/configure what features you want accordingly. 
 
+- "mpv.lua" was the only thing added and "modernz.lua" was the only one modified.
+
 
 **Folder Structure** [[mpv manual](https://mpv.io/manual/master/#files)]
 
