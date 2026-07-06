@@ -1017,28 +1017,11 @@ local function update_margins()
         b = (use_margins and bottom_vis) and osc_param.video_margins.b or 0,
     }
 
-    -- raise amount is based on OSC height
-    if user_opts.sub_margins and mp.get_property_native("sid") then
-        if margins.b > 0 then
-            local raise_percent = margins.b * 100
-            -- only raise if subs are low enough that they would overlap the OSC
-            if state.user_subpos >= (100 - raise_percent) then
-                local adjusted = math.floor((1 - margins.b) * 100)
-                if adjusted < 0 then adjusted = state.user_subpos end
-                state.osc_adjusted_subpos = adjusted
-                mp.set_property_number("sub-pos", adjusted)
-            else
-                -- sub pos is high; do nothing
-                state.osc_adjusted_subpos = nil
-            end
-        else
-            -- restore original sub position
-            if state.osc_adjusted_subpos ~= nil then
-                mp.set_property_number("sub-pos", state.user_subpos)
-                state.osc_adjusted_subpos = nil
-            end
-        end
-    end
+    -- DISABLE sub_margins - subtitles won't move anymore
+    -- Commented out the code that moves subtitles
+    -- if user_opts.sub_margins and mp.get_property_native("sid") then
+    -- ... (all the code that moves subtitles)
+    -- end
 
     if user_opts.osd_margins then
         local align = mp.get_property("osd-align-y")
@@ -1053,7 +1036,6 @@ local function update_margins()
 
     mp.set_property_native("user-data/osc/margins", margins)
 end
-
 local tick
 
 -- Request that tick() is called (which typically re-renders the OSC).
@@ -2032,18 +2014,22 @@ local function window_controls()
         y = 50,
         an = 1,
         w = osc_param.playresx,
-        h = 50,
+        h = 40,  -- Reduced from 50 to 40
     }
 
     local lo
-    local ontop_active = user_opts.ontop_button and window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop
+    local ontop_active = user_opts.ontop_button and window_controls_enabled() and user_opts.ontop_in_topbar and state.ontop 
     local controlbox_w = (user_opts.window_controls and window_control_box_width or 0)
-    local controlbox_left = wc_geo.w - controlbox_w
+    local controlbox_left = wc_geo.w - controlbox_w + 30 -- (1.) Smaller window controls size
     local titlebox_left = ontop_active and 50 or wc_geo.x
     local button_y = wc_geo.y - (wc_geo.h / 2)
-    local first_geo  = {x = controlbox_left + 25,  y = button_y, an = 5, w = 50, h = wc_geo.h}
-    local second_geo = {x = controlbox_left + 75, y = button_y, an = 5, w = 49, h = wc_geo.h}
-    local third_geo  = {x = controlbox_left + 125, y = button_y, an = 5, w = 50, h = wc_geo.h}
+    
+    -- Smaller button sizes
+    local button_size = 15  -- Changed from 50
+    local button_offset = 35  -- Spacing between buttons
+    local first_geo  = {x = controlbox_left + 18,  y = button_y, an = 5, w = button_size, h = wc_geo.h}
+    local second_geo = {x = controlbox_left + 18 + button_offset, y = button_y, an = 5, w = button_size, h = wc_geo.h}
+    local third_geo  = {x = controlbox_left + 18 + button_offset * 2, y = button_y, an = 5, w = button_size, h = wc_geo.h}
 
     -- Window controls
     if user_opts.window_controls then
@@ -2056,7 +2042,8 @@ local function window_controls()
         local function wc_button(name, geom, hover_color)
             lo = add_layout(name)
             lo.geometry = geom
-            lo.style = osc_styles.window_control
+            -- Smaller font size (18 instead of 25)
+            lo.style = osc_styles.window_control:gsub("\\fs25", "\\fs18")
             lo.group = "top"
             lo.button.hoverstyle = wc_hoverstyle(hover_color)
         end
@@ -2072,8 +2059,8 @@ local function window_controls()
         elements["ontop"].hover_radius = 0
         elements["ontop"].hover_pad = 0
         lo = add_layout("ontop")
-        lo.geometry = {x = 25, y = button_y, an = 5, w = 50, h = wc_geo.h}
-        lo.style = osc_styles.window_control
+        lo.geometry = {x = 25, y = button_y, an = 5, w = button_size, h = wc_geo.h}
+        lo.style = osc_styles.window_control:gsub("\\fs25", "\\fs18")
         lo.group = "top"
         lo.button.hoverstyle = osc_styles.element_hover
     end
@@ -2081,7 +2068,7 @@ local function window_controls()
     -- Window Title
     if user_opts.show_window_title then
         lo = add_layout("windowtitle")
-        lo.geometry = {x = math.max(20, titlebox_left + 4), y = button_y + 14, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
+        lo.geometry = {x = math.max(20, titlebox_left + 4), y = button_y + 10, an = 1, w = osc_param.playresx - 50, h = wc_geo.h}
         lo.group = "top"
         lo.alpha[3] = 0
         lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.window_title, titlebox_left, wc_geo.y - wc_geo.h, controlbox_left, wc_geo.y + wc_geo.h)
@@ -3731,6 +3718,7 @@ end
 local click_keys = {
     "mbtn_left_up", "mbtn_left_down", "mbtn_left_press",
     "mbtn_right_up", "mbtn_right_down", "mbtn_right_press",
+    "wheel_up_press", "wheel_down_press",
 }
 local function has_click_action(e)
     if not e.eventresponder then return false end
@@ -3740,21 +3728,9 @@ local function has_click_action(e)
     return false
 end
 
-local function has_wheel_action(e)
-    if not e.eventresponder then return false end
-    return e.eventresponder["wheel_up_press"] ~= nil or e.eventresponder["wheel_down_press"] ~= nil
-end
-
-local function has_mid_action(e)
-    if not e.eventresponder then return false end
-    return e.eventresponder["shift+mbtn_left_down"] ~= nil
-end
-
 local function refresh_input_area()
     if not state.osc_visible then
         set_virt_mouse_area(0, 0, 0, 0, "input")
-        set_virt_mouse_area(0, 0, 0, 0, "input_wheel")
-        set_virt_mouse_area(0, 0, 0, 0, "input_mid")
         return
     end
 
@@ -3762,40 +3738,30 @@ local function refresh_input_area()
     if state.active_element and elements[state.active_element] then
         local e = elements[state.active_element]
         set_virt_mouse_area(e.hitbox.x1, e.hitbox.y1, e.hitbox.x2, e.hitbox.y2, "input")
-        set_virt_mouse_area(e.hitbox.x1, e.hitbox.y1, e.hitbox.x2, e.hitbox.y2, "input_wheel")
-        set_virt_mouse_area(e.hitbox.x1, e.hitbox.y1, e.hitbox.x2, e.hitbox.y2, "input_mid")
         return
     end
 
     -- bail early if the cursor isn't inside the bottom bar zone at all
     if not mouse_in_area("input") then
         set_virt_mouse_area(0, 0, 0, 0, "input")
-        set_virt_mouse_area(0, 0, 0, 0, "input_wheel")
-        set_virt_mouse_area(0, 0, 0, 0, "input_mid")
         return
     end
 
-    -- find the topmost element under the cursor for each input type in one pass;
+    -- find the topmost element with direct click handlers under the cursor;
     -- layer order matches process_event's dispatch priority
-    local hovered_click, hovered_wheel, hovered_mid = nil, nil, nil
+    local hovered = nil
     for n = 1, #elements do
         local e = elements[n]
-        if e.hitbox and mouse_hit(e) then
-            if has_click_action(e) then hovered_click = e end
-            if has_wheel_action(e) then hovered_wheel = e end
-            if has_mid_action(e)   then hovered_mid   = e end
+        if e.hitbox and has_click_action(e) and mouse_hit(e) then
+            hovered = e
         end
     end
 
-    set_virt_mouse_area(
-        hovered_click and hovered_click.hitbox.x1 or 0, hovered_click and hovered_click.hitbox.y1 or 0,
-        hovered_click and hovered_click.hitbox.x2 or 0, hovered_click and hovered_click.hitbox.y2 or 0, "input")
-    set_virt_mouse_area(
-        hovered_wheel and hovered_wheel.hitbox.x1 or 0, hovered_wheel and hovered_wheel.hitbox.y1 or 0,
-        hovered_wheel and hovered_wheel.hitbox.x2 or 0, hovered_wheel and hovered_wheel.hitbox.y2 or 0, "input_wheel")
-    set_virt_mouse_area(
-        hovered_mid and hovered_mid.hitbox.x1 or 0, hovered_mid and hovered_mid.hitbox.y1 or 0,
-        hovered_mid and hovered_mid.hitbox.x2 or 0, hovered_mid and hovered_mid.hitbox.y2 or 0, "input_mid")
+    if hovered then
+        set_virt_mouse_area(hovered.hitbox.x1, hovered.hitbox.y1, hovered.hitbox.x2, hovered.hitbox.y2, "input")
+    else
+        set_virt_mouse_area(0, 0, 0, 0, "input")
+    end
 end
 
 local function process_event(source, what)
@@ -4188,9 +4154,10 @@ mp.register_event("seek", function()
         state.file_loaded = false
         return
     end
-    if user_opts.osc_on_seek and not (state.file_loop and mp.get_property_number("time-pos", -1) == 0) then
-        show_osc()
-    end
+    -- DISABLED: OSC no longer shows on seek
+    -- if user_opts.osc_on_seek and not (state.file_loop and mp.get_property_number("time-pos", -1) == 0) then
+    --     show_osc()
+    -- end
 end)
 mp.observe_property("seeking", "native", function(_, seeking)
     if user_opts.osc_on_seek then
@@ -4260,23 +4227,16 @@ mp.set_key_bindings({
                             function() process_event("mbtn_right", "down")  end},
     {"shift+mbtn_right",    function() process_event("shift+mbtn_right", "up") end,
                             function() process_event("shift+mbtn_right", "down")  end},
+    -- alias to shift_mbtn_left for single-handed mouse use
+    {"mbtn_mid",            function() process_event("shift+mbtn_left", "up") end,
+                            function() process_event("shift+mbtn_left", "down")  end},
+    {"wheel_up",            function() process_event("wheel_up", "press") end},
+    {"wheel_down",          function() process_event("wheel_down", "press") end},
     {"mbtn_left_dbl",       "ignore"},
     {"shift+mbtn_left_dbl", "ignore"},
     {"mbtn_right_dbl",      "ignore"},
 }, "input", "force")
 mp.enable_key_bindings("input")
-
-mp.set_key_bindings({
-    {"wheel_up",   function() process_event("wheel_up", "press") end},
-    {"wheel_down", function() process_event("wheel_down", "press") end},
-}, "input_wheel", "force")
-mp.enable_key_bindings("input_wheel")
-
-mp.set_key_bindings({
-    {"mbtn_mid", function() process_event("shift+mbtn_left", "up") end,
-                 function() process_event("shift+mbtn_left", "down")  end},
-}, "input_mid", "force")
-mp.enable_key_bindings("input_mid")
 
 mp.set_key_bindings({
     {"mbtn_left",           function() process_event("mbtn_left", "up") end,
@@ -4372,38 +4332,34 @@ end
 mp.observe_property("pause", "bool", function(_, enabled)
     state.pause = (enabled == true)
     request_tick()
-    if user_opts.showonpause and user_opts.visibility ~= "never" then
-        state.enabled = enabled
-        if enabled then
-            if user_opts.keeponpause == "both" then
-                -- save mode and set visibility to "always" temporarily
-                if not state.keeponpause_restore and user_opts.visibility ~= "always" then
-                    state.keeponpause_restore = user_opts.visibility
-                end
-                visibility_mode("always", true)
-            elseif user_opts.keeponpause == "bottombar" then
-                state.keeponpause_active = true
-                show_osc()
-            else
-                show_osc()
-            end
-        else
-            -- clear keeponpause bottombar active state
-            state.keeponpause_active = false
-            -- restore mode if it was changed by keeponpause=both
-            if state.keeponpause_restore then
-                visibility_mode(state.keeponpause_restore, true)
-                state.keeponpause_restore = nil
-            else
-                -- respect "always" mode on unpause
-                visibility_mode(user_opts.visibility, true)
-            end
-            -- reset timers so both bars get a fresh hidetimeout on unpause
-            local now = mp.get_time()
-            if state.osc_visible then state.showtime = now end
-            if state.wc_visible then state.wc_showtime = now end
-        end
-    end
+    -- DISABLED: OSC no longer shows on pause
+    -- if user_opts.showonpause and user_opts.visibility ~= "never" then
+    --     state.enabled = enabled
+    --     if enabled then
+    --         if user_opts.keeponpause == "both" then
+    --             if not state.keeponpause_restore and user_opts.visibility ~= "always" then
+    --                 state.keeponpause_restore = user_opts.visibility
+    --             end
+    --             visibility_mode("always", true)
+    --         elseif user_opts.keeponpause == "bottombar" then
+    --             state.keeponpause_active = true
+    --             show_osc()
+    --         else
+    --             show_osc()
+    --         end
+    --     else
+    --         state.keeponpause_active = false
+    --         if state.keeponpause_restore then
+    --             visibility_mode(state.keeponpause_restore, true)
+    --             state.keeponpause_restore = nil
+    --         else
+    --             visibility_mode(user_opts.visibility, true)
+    --         end
+    --         local now = mp.get_time()
+    --         if state.osc_visible then state.showtime = now end
+    --         if state.wc_visible then state.wc_showtime = now end
+    --     end
+    -- end
 end)
 
 mp.register_script_message("osc-visibility", visibility_mode)
@@ -4532,7 +4488,16 @@ set_tick_delay()
 visibility_mode(user_opts.visibility, true)
 
 set_virt_mouse_area(0, 0, 0, 0, "input")
-set_virt_mouse_area(0, 0, 0, 0, "input_wheel")
-set_virt_mouse_area(0, 0, 0, 0, "input_mid")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-title")
+
+local is_auto = true
+
+-- Permanently disable progress bar
+mp.set_property("osd-bar", "no")
+
+mp.add_key_binding("DEL", "toggle-osc", function()
+    is_auto = not is_auto
+    mp.command("script-message osc-visibility " .. (is_auto and "auto" or "never"))
+    mp.osd_message("OSC: " .. (is_auto and "AUTO" or "NEVER"), 1)
+end)
