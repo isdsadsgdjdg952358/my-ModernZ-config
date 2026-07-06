@@ -17,9 +17,26 @@
 If you want to implement without downloading anything, just compare codes differences from the original lua and mine and paste/configure what features you want accordingly. 
 
 
+**Folder Structure** [[mpv manual](https://mpv.io/manual/master/#files)]
+
+```
+📁 mpv/
+├── 📁 fonts/
+│   └── 📄 modernz-icons.ttf
+├── 📁 script-opts/
+│   ├── 📄 modernz.conf
+│   └── 📄 modernz-locale.json (optional)
+├─── 📁 scripts/
+│    ├── 📄 modernz.lua
+│    └── 📄 thumbfast.lua (optional)
+└── 📄 mpv.conf 
+```
+
 > [!WARNING]
 > Deepseek AI was used to make my config, sorry. If you want this down, let me know.
 
+---
+---
 ---
 
 
