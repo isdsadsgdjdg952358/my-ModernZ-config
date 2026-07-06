@@ -14,7 +14,7 @@
 
 
 
-If you want to implement without downloading anything, just compare codes differents from the original lua and mine and paste/configure what features you want accordingly. 
+If you want to implement without downloading anything, just compare codes differences from the original lua and mine and paste/configure what features you want accordingly. 
 
 
 > [!WARNING]
