@@ -11,8 +11,7 @@
 2. fixed subtitle margins that doesn't get pushed when osc is visible
 3. hidden osc and floating progress bar when < and > pressed & video is paused
 4. theatre mode: DEL shortcut which completely hides/enables the OSC to prevent distractions
-
-
+5. infinite playlist loop (useful for listening to music)
 
 If you want to implement without downloading anything, just compare codes differences from the original lua and mine and paste/configure what features you want accordingly. 
 
